@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/repository.dart';
+import '../i18n.dart';
 import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -10,7 +11,7 @@ import '../widgets.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
-  static const _languages = ['English', 'አማርኛ', 'Afaan Oromo', 'ትግርኛ'];
+  static const _languages = supportedLanguages;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,6 +20,8 @@ class ProfileScreen extends ConsumerWidget {
     final name = Repo.displayName ?? (signedIn ? 'Your account' : 'Guest');
 
     return PageBody(
+      showBack: true,
+      fallback: '/home',
       title: 'Profile & help',
       children: [
         AppCard(
@@ -26,7 +29,7 @@ class ProfileScreen extends ConsumerWidget {
             CircleAvatar(
               radius: 26,
               backgroundColor: C.tint,
-              child: Text(name[0].toUpperCase(),
+              child: Tx(name[0].toUpperCase(),
                   style: const TextStyle(
                       color: C.primary,
                       fontWeight: FontWeight.w800,
@@ -35,10 +38,10 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(name,
+                Tx(name,
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 17)),
-                Text(
+                Tx(
                     signedIn
                         ? (Repo.email ?? 'Signed in')
                         : 'Using SheRise without an account',
@@ -62,7 +65,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 for (final l in _languages)
                   ListTile(
-                    title: Text(l),
+                    title: Tx(l),
                     trailing:
                         language == l ? const Icon(Icons.check, color: C.primary) : null,
                     onTap: () {
@@ -72,7 +75,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 const Padding(
                   padding: EdgeInsets.all(16),
-                  child: Text('Full translations are coming.',
+                  child: Tx('Full translations are coming.',
                       style: TextStyle(color: C.muted, fontSize: 12)),
                 ),
               ]),
@@ -90,6 +93,13 @@ class ProfileScreen extends ConsumerWidget {
           title: 'My Cases',
           sub: 'Private updates for saved reports',
           onTap: () => context.push('/home/cases'),
+        ),
+        const SectionTitle('Institutional Administration'),
+        _Setting(
+          icon: Icons.admin_panel_settings_outlined,
+          title: 'Institution Board',
+          sub: 'Admin intake portal: review delivered reports, assign officers & execute workflows',
+          onTap: () => context.push('/institution'),
         ),
         const _Setting(
           icon: Icons.lock_outline,
@@ -118,13 +128,13 @@ class ProfileScreen extends ConsumerWidget {
           onPressed: () => showDialog<void>(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: const Text('Delete data on this device?'),
-              content: const Text(
+              title: const Tx('Delete data on this device?'),
+              content: const Tx(
                   'This removes saved case codes, your trusted contact, your safety plan and language choice from this device. It does not delete reports already submitted.'),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel')),
+                    child: const Tx('Cancel')),
                 FilledButton(
                   onPressed: () async {
                     await clearAllLocalData();
@@ -135,7 +145,7 @@ class ProfileScreen extends ConsumerWidget {
                     if (ctx.mounted) Navigator.pop(ctx);
                     if (context.mounted) snack(context, 'Data removed from this device.');
                   },
-                  child: const Text('Delete'),
+                  child: const Tx('Delete'),
                 ),
               ],
             ),
@@ -150,9 +160,14 @@ class ProfileScreen extends ConsumerWidget {
               if (context.mounted) context.go('/welcome');
             },
           ),
-        const SizedBox(height: 8),
+        SecondaryButton(
+          label: 'Back to home',
+          icon: Icons.arrow_back,
+          onPressed: () => context.go('/home'),
+        ),
+        const SizedBox(height: 12),
         const Center(
-          child: Text('SheRise 0.1 · Safe. Respected. Equal.',
+          child: Tx('SheRise 0.1 · Safe. Respected. Equal.',
               style: TextStyle(fontSize: 12, color: C.muted)),
         ),
       ],
@@ -177,9 +192,9 @@ class _Setting extends StatelessWidget {
           const SizedBox(width: 14),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+              Tx(title, style: const TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
-              Text(sub,
+              Tx(sub,
                   style: const TextStyle(fontSize: 12, color: C.muted, height: 1.35)),
             ]),
           ),
@@ -200,11 +215,11 @@ class _Info extends StatelessWidget {
         child: ExpansionTile(
           shape: const Border(),
           collapsedShape: const Border(),
-          title: Text(title,
+          title: Tx(title,
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
-          children: [Text(body, style: const TextStyle(height: 1.5, fontSize: 13))],
+          children: [Tx(body, style: const TextStyle(height: 1.5, fontSize: 13))],
         ),
       );
 }

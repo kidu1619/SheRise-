@@ -20,7 +20,7 @@ class HomeScreen extends StatelessWidget {
         Row(children: [
           const BrandMark(size: 32),
           const SizedBox(width: 8),
-          const Text('SheRise',
+          const Tx('SheRise',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           const Spacer(),
           IconButton.filledTonal(
@@ -40,11 +40,11 @@ class HomeScreen extends StatelessWidget {
           ),
         ]),
         const SizedBox(height: 16),
-        Text(DateFormat('EEEE, d MMMM').format(DateTime.now()).toUpperCase(),
+        Tx(DateFormat('EEEE, d MMMM').format(DateTime.now()).toUpperCase(),
             style: const TextStyle(
                 fontSize: 11, color: C.muted, letterSpacing: .6)),
         const SizedBox(height: 4),
-        Text(name == null ? 'Hello' : 'Hello, $name',
+        Tx(name == null ? 'Hello' : 'Hello, $name',
             style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         AppCard(
@@ -54,11 +54,11 @@ class HomeScreen extends StatelessWidget {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Pill('Here, you come first', bg: Colors.white),
             const SizedBox(height: 14),
-            const Text('A safer today.\nA stronger tomorrow.',
+            const Tx('A safer today.\nA stronger tomorrow.',
                 style: TextStyle(
                     fontSize: 24, fontWeight: FontWeight.w800, height: 1.2)),
             const SizedBox(height: 8),
-            const Text('Your safety. Your voice. Your future.',
+            const Tx('Your safety. Your voice. Your future.',
                 style: TextStyle(color: C.muted)),
           ]),
         ),
@@ -71,10 +71,10 @@ class HomeScreen extends StatelessWidget {
             SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('SOS / Safety Center',
+                Tx('SOS / Safety Center',
                     style: TextStyle(
                         color: C.danger, fontWeight: FontWeight.w700)),
-                Text('Emergency information & trusted contacts',
+                Tx('Emergency information & trusted contacts',
                     style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
@@ -100,6 +100,44 @@ class HomeScreen extends StatelessWidget {
               child: _Tile(Icons.folder_open, 'My Cases',
                   'View private updates', () => context.push('/home/cases'))),
         ]),
+        const SizedBox(height: 12),
+        AppCard(
+          color: Colors.white,
+          border: C.tintBorder,
+          onTap: () => context.push('/institution'),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: C.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.admin_panel_settings_outlined, color: C.primary, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Tx('Institution Board',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                        SizedBox(width: 6),
+                        Pill('Staff & Admin', bg: C.tint, fg: C.primary),
+                      ],
+                    ),
+                    SizedBox(height: 2),
+                    Tx('Delivered reports, case reviews & partner workflows',
+                        style: TextStyle(fontSize: 12, color: C.muted)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, size: 20, color: C.muted),
+            ],
+          ),
+        ),
         SectionTitle('A step toward your future',
             actionLabel: 'Explore all', onAction: () => context.go('/explore')),
         AppCard(
@@ -118,11 +156,11 @@ class HomeScreen extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Pill('Sample listing · Training'),
                 const SizedBox(height: 10),
-                Text(featured.title,
+                Tx(featured.title,
                     style: const TextStyle(
                         fontSize: 17, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text('${featured.location} · ${featured.deadline}',
+                Tx('${featured.location} · ${featured.deadline}',
                     style: const TextStyle(color: C.muted, fontSize: 12)),
               ]),
             ),
@@ -157,9 +195,9 @@ class _Tile extends StatelessWidget {
             child: Icon(icon, color: C.primary, size: 20),
           ),
           const SizedBox(height: 12),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          Tx(title, style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
-          Text(sub, style: const TextStyle(color: C.muted, fontSize: 12)),
+          Tx(sub, style: const TextStyle(color: C.muted, fontSize: 12)),
         ]),
       );
 }

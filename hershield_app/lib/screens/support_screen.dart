@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/models.dart';
@@ -29,6 +30,8 @@ class _SupportScreenState extends State<SupportScreen> {
   @override
   Widget build(BuildContext context) {
     return PageBody(
+      showBack: true,
+      fallback: '/home',
       title: 'SupportConnect',
       subtitle: 'Find trusted counseling, legal-aid and support services.',
       children: [
@@ -39,7 +42,7 @@ class _SupportScreenState extends State<SupportScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
-                  label: Text(f == 'all' ? 'All' : kindLabels[f]!),
+                  label: Tx(f == 'all' ? 'All' : kindLabels[f]!),
                   selected: _filter == f,
                   onSelected: (_) => setState(() => _filter = f),
                 ),
@@ -84,6 +87,12 @@ class _SupportScreenState extends State<SupportScreen> {
           text:
               'Listings are checked before they appear, but please confirm details directly before relying on them.',
         ),
+        const SizedBox(height: 16),
+        SecondaryButton(
+          label: 'Back to home',
+          icon: Icons.arrow_back,
+          onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+        ),
       ],
     );
   }
@@ -104,24 +113,24 @@ class _ServiceCard extends StatelessWidget {
               : const Pill('Sample listing', bg: C.warnBg, fg: C.warn),
         ]),
         const SizedBox(height: 10),
-        Text(s.name,
+        Tx(s.name,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
         if (s.city.isNotEmpty || s.languages.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text(
+            child: Tx(
                 [s.city, s.languages].where((e) => e.isNotEmpty).join(' · '),
                 style: const TextStyle(color: C.muted, fontSize: 12)),
           ),
         if (s.eligibility.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(s.eligibility,
+            child: Tx(s.eligibility,
                 style: const TextStyle(fontSize: 13, height: 1.4)),
           ),
         const SizedBox(height: 12),
         if (s.phone == null && s.email == null)
-          const Text('Contact details are added after verification.',
+          const Tx('Contact details are added after verification.',
               style: TextStyle(fontSize: 12, color: C.muted))
         else
           Row(children: [
@@ -130,7 +139,7 @@ class _ServiceCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => launchUrl(Uri.parse('tel:${s.phone}')),
                   icon: const Icon(Icons.call, size: 18),
-                  label: const Text('Call'),
+                  label: const Tx('Call'),
                 ),
               ),
             if (s.phone != null && s.email != null) const SizedBox(width: 8),
@@ -139,7 +148,7 @@ class _ServiceCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => launchUrl(Uri.parse('mailto:${s.email}')),
                   icon: const Icon(Icons.mail_outline, size: 18),
-                  label: const Text('Email'),
+                  label: const Tx('Email'),
                 ),
               ),
           ]),

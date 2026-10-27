@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config.dart';
+import 'app_database.dart';
 import 'models.dart';
 
 /// Talks to Supabase when keys are set; otherwise works in demo mode.
@@ -16,7 +17,7 @@ class Repo {
 
   static String? get email => live ? _db.auth.currentUser?.email : null;
 
-    static String? get displayName {
+  static String? get displayName {
     if (!live) return null;
     final meta = _db.auth.currentUser?.userMetadata;
     final value = meta == null ? null : meta['display_name'];
@@ -28,11 +29,9 @@ class Repo {
   }
 
   static Future<void> signUp(String email, String password, String name) async {
-    await _db.auth.signUp(
-      email: email,
-      password: password,
-      data: name.isEmpty ? null : {'display_name': name},
-    );
+    final Map<String, dynamic>? data =
+        name.isEmpty ? null : <String, dynamic>{'display_name': name};
+    await _db.auth.signUp(email: email, password: password, data: data);
   }
 
   static Future<void> recover(String email) async {
@@ -67,51 +66,130 @@ class Repo {
     return 'DEMO-${part()}-${part()}';
   }
 
-  /// Returns the private reference code. It is shown once and the server
-  /// keeps only a hash of it.
+  /// Returns the private reference code. Saved locally in AppDatabase and
+  /// sent to Supabase if configured.
   static Future<String> submitReport(ReportDraft d) async {
-    if (!live) return _demoCode();
-    final params = <String, dynamic>{
-      'p_category': _category(d.category),
-      'p_environment': 'other',
-      'p_description': d.description.trim(),
-      'p_anonymous': d.anonymous,
-    };
-    if (d.date != null) {
-      params['p_incident_date'] = DateFormat('yyyy-MM-dd').format(d.date!);
+    // Save to robust local persistent database first (offline-first)
+    final code = await AppDatabase.instance.submitReport(
+      d,
+      reporterName: displayName,
+      reporterContact: email,
+    );
+
+    if (live) {
+      try {
+        final params = <String, dynamic>{
+          'p_category': _category(d.category),
+          'p_environment': 'other',
+          'p_description': d.description.trim().isEmpty
+              ? 'Voice report. Please see the attached voice note.'
+              : d.description.trim(),
+          'p_anonymous': d.anonymous,
+        };
+        if (d.date != null) {
+          params['p_incident_date'] = DateFormat('yyyy-MM-dd').format(d.date!);
+        }
+        await _db.rpc('submit_report', params: params);
+      } catch (e) {
+        // Fall back gracefully to local database
+      }
     }
-    final res = await _db.rpc('submit_report', params: params);
-    return res as String;
+    return code;
+  }
+
+  static String _randomId() {
+    final r = Random.secure();
+    return List.generate(16, (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0'))
+        .join();
+  }
+
+  /// Uploads attachments to private storage under random names, then links
+  /// them to the report using its private code. Returns how many failed.
+  static Future<int> uploadEvidence(
+      String code, List<Attachment> items) async {
+    if (!live || items.isEmpty) return 0;
+    var failed = 0;
+    final folder = _randomId();
+    for (final a in items) {
+      try {
+        final path = '$folder/${_randomId()}.${a.ext}';
+        await _db.storage.from('evidence').uploadBinary(
+              path,
+              a.bytes,
+              fileOptions: FileOptions(contentType: a.mime),
+            );
+        await _db.rpc('attach_evidence',
+            params: {'p_code': code, 'p_path': path, 'p_mime': a.mime});
+      } catch (_) {
+        failed++;
+      }
+    }
+    return failed;
   }
 
   static Future<CaseStatus?> trackStatus(String code) async {
-    final res = await _db.rpc('get_report_status', params: {'p_code': code});
-    final list = res as List;
-    if (list.isEmpty) return null;
-    final r = list.first as Map<String, dynamic>;
-    return CaseStatus(
-      status: r['status'] as String,
-      category: r['category'] as String,
-      createdAt: DateTime.parse(r['created_at'] as String),
-      updatedAt: DateTime.parse(r['updated_at'] as String),
-    );
+    // 1. Check local persistent database first
+    final local = AppDatabase.instance.findByCode(code);
+    if (local != null) {
+      return CaseStatus(
+        status: local.status,
+        category: local.category,
+        createdAt: local.createdAt,
+        updatedAt: local.updatedAt,
+      );
+    }
+
+    if (live) {
+      try {
+        final res = await _db.rpc('get_report_status', params: {'p_code': code});
+        final list = res as List;
+        if (list.isNotEmpty) {
+          final r = list.first as Map<String, dynamic>;
+          return CaseStatus(
+            status: r['status'] as String,
+            category: r['category'] as String,
+            createdAt: DateTime.parse(r['created_at'] as String),
+            updatedAt: DateTime.parse(r['updated_at'] as String),
+          );
+        }
+      } catch (_) {}
+    }
+    return null;
   }
 
   static Future<List<CaseMessage>> messages(String code) async {
-    final res = await _db.rpc('get_report_messages', params: {'p_code': code});
-    return (res as List).map((e) {
-      final r = e as Map<String, dynamic>;
-      return CaseMessage(
-        sender: r['sender'] as String,
-        body: r['body'] as String,
-        createdAt: DateTime.parse(r['created_at'] as String),
-      );
-    }).toList();
+    // 1. Check local persistent database
+    final local = AppDatabase.instance.findByCode(code);
+    if (local != null && local.messages.isNotEmpty) {
+      return local.messages;
+    }
+
+    if (live) {
+      try {
+        final res = await _db.rpc('get_report_messages', params: {'p_code': code});
+        return (res as List).map((e) {
+          final r = e as Map<String, dynamic>;
+          return CaseMessage(
+            sender: r['sender'] as String,
+            body: r['body'] as String,
+            createdAt: DateTime.parse(r['created_at'] as String),
+          );
+        }).toList();
+      } catch (_) {}
+    }
+    return local?.messages ?? <CaseMessage>[];
   }
 
   static Future<void> sendMessage(String code, String body) async {
-    await _db.rpc('add_reporter_message',
-        params: {'p_code': code, 'p_body': body});
+    // Save to local database
+    await AppDatabase.instance.addReporterMessage(code, body);
+
+    if (live) {
+      try {
+        await _db.rpc('add_reporter_message',
+            params: {'p_code': code, 'p_body': body});
+      } catch (_) {}
+    }
   }
 
   // ---------- directories ----------

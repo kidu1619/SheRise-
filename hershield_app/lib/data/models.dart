@@ -1,3 +1,26 @@
+import 'dart:typed_data';
+
+/// A photo, PDF or voice note attached to a report (held in memory only).
+class Attachment {
+  const Attachment({
+    required this.name,
+    required this.kind, // 'file' or 'voice'
+    required this.ext,
+    required this.mime,
+    required this.bytes,
+    this.seconds,
+  });
+
+  final String name; // shown to the user only, never uploaded
+  final String kind;
+  final String ext;
+  final String mime;
+  final Uint8List bytes;
+  final int? seconds;
+
+  int get size => bytes.length;
+}
+
 class ReportDraft {
   const ReportDraft({
     this.category,
@@ -5,6 +28,7 @@ class ReportDraft {
     this.location = '',
     this.description = '',
     this.anonymous = true,
+    this.attachments = const [],
   });
 
   final String? category;
@@ -12,6 +36,7 @@ class ReportDraft {
   final String location;
   final String description;
   final bool anonymous;
+  final List<Attachment> attachments;
 
   ReportDraft copyWith({
     String? category,
@@ -19,6 +44,7 @@ class ReportDraft {
     String? location,
     String? description,
     bool? anonymous,
+    List<Attachment>? attachments,
   }) =>
       ReportDraft(
         category: category ?? this.category,
@@ -26,10 +52,14 @@ class ReportDraft {
         location: location ?? this.location,
         description: description ?? this.description,
         anonymous: anonymous ?? this.anonymous,
+        attachments: attachments ?? this.attachments,
       );
 
   bool get isEmpty =>
-      category == null && description.isEmpty && location.isEmpty;
+      category == null &&
+      description.isEmpty &&
+      location.isEmpty &&
+      attachments.isEmpty;
 }
 
 class CaseRecord {
@@ -74,12 +104,389 @@ class CaseStatus {
 }
 
 class CaseMessage {
-  const CaseMessage(
-      {required this.sender, required this.body, required this.createdAt});
+  const CaseMessage({
+    required this.sender,
+    required this.body,
+    required this.createdAt,
+    this.id,
+    this.senderName,
+  });
+
+  final String? id;
   final String sender; // 'reporter' or 'staff'
+  final String? senderName;
   final String body;
   final DateTime createdAt;
+
+  Map<String, dynamic> toJson() => {
+        'id': id ?? '',
+        'sender': sender,
+        'senderName': senderName ?? (sender == 'reporter' ? 'Reporter' : 'Support Officer'),
+        'body': body,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory CaseMessage.fromJson(Map<String, dynamic> j) => CaseMessage(
+        id: j['id'] as String?,
+        sender: j['sender'] as String? ?? 'reporter',
+        senderName: j['senderName'] as String?,
+        body: j['body'] as String? ?? '',
+        createdAt: j['createdAt'] != null
+            ? DateTime.parse(j['createdAt'] as String)
+            : DateTime.now(),
+      );
 }
+
+class EvidenceAttachment {
+  const EvidenceAttachment({
+    required this.name,
+    required this.kind, // 'voice' or 'file'
+    required this.ext,
+    required this.mime,
+    required this.size,
+    this.seconds,
+    this.dataBase64,
+  });
+
+  final String name;
+  final String kind;
+  final String ext;
+  final String mime;
+  final int size;
+  final int? seconds;
+  final String? dataBase64;
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'kind': kind,
+        'ext': ext,
+        'mime': mime,
+        'size': size,
+        'seconds': seconds,
+        'dataBase64': dataBase64,
+      };
+
+  factory EvidenceAttachment.fromJson(Map<String, dynamic> j) =>
+      EvidenceAttachment(
+        name: j['name'] as String? ?? 'attachment',
+        kind: j['kind'] as String? ?? 'file',
+        ext: j['ext'] as String? ?? '',
+        mime: j['mime'] as String? ?? 'application/octet-stream',
+        size: (j['size'] as num?)?.toInt() ?? 0,
+        seconds: (j['seconds'] as num?)?.toInt(),
+        dataBase64: j['dataBase64'] as String?,
+      );
+}
+
+class InternalNote {
+  const InternalNote({
+    required this.id,
+    required this.author,
+    required this.content,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String author;
+  final String content;
+  final DateTime createdAt;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'author': author,
+        'content': content,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory InternalNote.fromJson(Map<String, dynamic> j) => InternalNote(
+        id: j['id'] as String? ?? '',
+        author: j['author'] as String? ?? 'Officer',
+        content: j['content'] as String? ?? '',
+        createdAt: j['createdAt'] != null
+            ? DateTime.parse(j['createdAt'] as String)
+            : DateTime.now(),
+      );
+}
+
+class CaseReferral {
+  const CaseReferral({
+    required this.partnerName,
+    required this.contactPerson,
+    required this.phone,
+    required this.notes,
+    required this.referredAt,
+    this.status = 'pending',
+  });
+
+  final String partnerName;
+  final String contactPerson;
+  final String phone;
+  final String notes;
+  final DateTime referredAt;
+  final String status; // 'pending', 'in_progress', 'completed'
+
+  Map<String, dynamic> toJson() => {
+        'partnerName': partnerName,
+        'contactPerson': contactPerson,
+        'phone': phone,
+        'notes': notes,
+        'referredAt': referredAt.toIso8601String(),
+        'status': status,
+      };
+
+  factory CaseReferral.fromJson(Map<String, dynamic> j) => CaseReferral(
+        partnerName: j['partnerName'] as String? ?? '',
+        contactPerson: j['contactPerson'] as String? ?? '',
+        phone: j['phone'] as String? ?? '',
+        notes: j['notes'] as String? ?? '',
+        referredAt: j['referredAt'] != null
+            ? DateTime.parse(j['referredAt'] as String)
+            : DateTime.now(),
+        status: j['status'] as String? ?? 'pending',
+      );
+}
+
+class CaseResolution {
+  const CaseResolution({
+    required this.outcome,
+    required this.summary,
+    required this.actionTaken,
+    required this.resolvedBy,
+    required this.resolvedAt,
+  });
+
+  final String outcome;
+  final String summary;
+  final String actionTaken;
+  final String resolvedBy;
+  final DateTime resolvedAt;
+
+  Map<String, dynamic> toJson() => {
+        'outcome': outcome,
+        'summary': summary,
+        'actionTaken': actionTaken,
+        'resolvedBy': resolvedBy,
+        'resolvedAt': resolvedAt.toIso8601String(),
+      };
+
+  factory CaseResolution.fromJson(Map<String, dynamic> j) => CaseResolution(
+        outcome: j['outcome'] as String? ?? '',
+        summary: j['summary'] as String? ?? '',
+        actionTaken: j['actionTaken'] as String? ?? '',
+        resolvedBy: j['resolvedBy'] as String? ?? '',
+        resolvedAt: j['resolvedAt'] != null
+            ? DateTime.parse(j['resolvedAt'] as String)
+            : DateTime.now(),
+      );
+}
+
+class AuditLogEntry {
+  const AuditLogEntry({
+    required this.id,
+    required this.action,
+    required this.actor,
+    required this.timestamp,
+    required this.details,
+  });
+
+  final String id;
+  final String action;
+  final String actor;
+  final DateTime timestamp;
+  final String details;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'action': action,
+        'actor': actor,
+        'timestamp': timestamp.toIso8601String(),
+        'details': details,
+      };
+
+  factory AuditLogEntry.fromJson(Map<String, dynamic> j) => AuditLogEntry(
+        id: j['id'] as String? ?? '',
+        action: j['action'] as String? ?? '',
+        actor: j['actor'] as String? ?? '',
+        timestamp: j['timestamp'] != null
+            ? DateTime.parse(j['timestamp'] as String)
+            : DateTime.now(),
+        details: j['details'] as String? ?? '',
+      );
+}
+
+class DeliveredReport {
+  const DeliveredReport({
+    required this.id,
+    required this.code,
+    required this.category,
+    required this.description,
+    required this.location,
+    this.incidentDate,
+    required this.anonymous,
+    this.reporterName,
+    this.reporterContact,
+    required this.status,
+    required this.priority,
+    this.assignedOfficer,
+    this.assignedDepartment,
+    required this.institutionName,
+    required this.createdAt,
+    required this.updatedAt,
+    this.attachments = const [],
+    this.messages = const [],
+    this.internalNotes = const [],
+    this.referral,
+    this.resolution,
+    this.auditLogs = const [],
+  });
+
+  final String id;
+  final String code;
+  final String category;
+  final String description;
+  final String location;
+  final DateTime? incidentDate;
+  final bool anonymous;
+  final String? reporterName;
+  final String? reporterContact;
+  final String status; // 'received', 'under_review', 'referred', 'resolved', 'closed'
+  final String priority; // 'urgent', 'high', 'medium', 'low'
+  final String? assignedOfficer;
+  final String? assignedDepartment;
+  final String institutionName;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final List<EvidenceAttachment> attachments;
+  final List<CaseMessage> messages;
+  final List<InternalNote> internalNotes;
+  final CaseReferral? referral;
+  final CaseResolution? resolution;
+  final List<AuditLogEntry> auditLogs;
+
+  DeliveredReport copyWith({
+    String? id,
+    String? code,
+    String? category,
+    String? description,
+    String? location,
+    DateTime? incidentDate,
+    bool? anonymous,
+    String? reporterName,
+    String? reporterContact,
+    String? status,
+    String? priority,
+    String? assignedOfficer,
+    String? assignedDepartment,
+    String? institutionName,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<EvidenceAttachment>? attachments,
+    List<CaseMessage>? messages,
+    List<InternalNote>? internalNotes,
+    CaseReferral? referral,
+    CaseResolution? resolution,
+    List<AuditLogEntry>? auditLogs,
+  }) =>
+      DeliveredReport(
+        id: id ?? this.id,
+        code: code ?? this.code,
+        category: category ?? this.category,
+        description: description ?? this.description,
+        location: location ?? this.location,
+        incidentDate: incidentDate ?? this.incidentDate,
+        anonymous: anonymous ?? this.anonymous,
+        reporterName: reporterName ?? this.reporterName,
+        reporterContact: reporterContact ?? this.reporterContact,
+        status: status ?? this.status,
+        priority: priority ?? this.priority,
+        assignedOfficer: assignedOfficer ?? this.assignedOfficer,
+        assignedDepartment: assignedDepartment ?? this.assignedDepartment,
+        institutionName: institutionName ?? this.institutionName,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        attachments: attachments ?? this.attachments,
+        messages: messages ?? this.messages,
+        internalNotes: internalNotes ?? this.internalNotes,
+        referral: referral ?? this.referral,
+        resolution: resolution ?? this.resolution,
+        auditLogs: auditLogs ?? this.auditLogs,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'code': code,
+        'category': category,
+        'description': description,
+        'location': location,
+        'incidentDate': incidentDate?.toIso8601String(),
+        'anonymous': anonymous,
+        'reporterName': reporterName,
+        'reporterContact': reporterContact,
+        'status': status,
+        'priority': priority,
+        'assignedOfficer': assignedOfficer,
+        'assignedDepartment': assignedDepartment,
+        'institutionName': institutionName,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+        'attachments': attachments.map((a) => a.toJson()).toList(),
+        'messages': messages.map((m) => m.toJson()).toList(),
+        'internalNotes': internalNotes.map((n) => n.toJson()).toList(),
+        'referral': referral?.toJson(),
+        'resolution': resolution?.toJson(),
+        'auditLogs': auditLogs.map((l) => l.toJson()).toList(),
+      };
+
+  factory DeliveredReport.fromJson(Map<String, dynamic> j) => DeliveredReport(
+        id: j['id'] as String? ?? '',
+        code: j['code'] as String? ?? '',
+        category: j['category'] as String? ?? 'Other',
+        description: j['description'] as String? ?? '',
+        location: j['location'] as String? ?? '',
+        incidentDate: j['incidentDate'] != null
+            ? DateTime.tryParse(j['incidentDate'] as String)
+            : null,
+        anonymous: (j['anonymous'] as bool?) ?? true,
+        reporterName: j['reporterName'] as String?,
+        reporterContact: j['reporterContact'] as String?,
+        status: j['status'] as String? ?? 'received',
+        priority: j['priority'] as String? ?? 'medium',
+        assignedOfficer: j['assignedOfficer'] as String?,
+        assignedDepartment: j['assignedDepartment'] as String?,
+        institutionName: j['institutionName'] as String? ?? 'Ethics Directorate',
+        createdAt: j['createdAt'] != null
+            ? DateTime.parse(j['createdAt'] as String)
+            : DateTime.now(),
+        updatedAt: j['updatedAt'] != null
+            ? DateTime.parse(j['updatedAt'] as String)
+            : DateTime.now(),
+        attachments: ((j['attachments'] as List?) ?? [])
+            .map((e) => EvidenceAttachment.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        messages: ((j['messages'] as List?) ?? [])
+            .map((e) => CaseMessage.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        internalNotes: ((j['internalNotes'] as List?) ?? [])
+            .map((e) => InternalNote.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        referral: j['referral'] != null
+            ? CaseReferral.fromJson(j['referral'] as Map<String, dynamic>)
+            : null,
+        resolution: j['resolution'] != null
+            ? CaseResolution.fromJson(j['resolution'] as Map<String, dynamic>)
+            : null,
+        auditLogs: ((j['auditLogs'] as List?) ?? [])
+            .map((e) => AuditLogEntry.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+const priorityLabels = {
+  'urgent': 'Urgent',
+  'high': 'High',
+  'medium': 'Medium',
+  'low': 'Low',
+};
 
 class TrustedContact {
   const TrustedContact(

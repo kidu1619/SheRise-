@@ -1,7 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'i18n.dart';
 import 'theme.dart';
+
+/// Translating text widget (use Tx instead of Text). It translates its content into
+/// the current language and updates instantly when the language changes.
+class Tx extends StatelessWidget {
+  const Tx(
+    this.data, {
+    super.key,
+    this.style,
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    this.softWrap,
+  });
+
+  final String data;
+  final TextStyle? style;
+  final TextAlign? textAlign;
+  final int? maxLines;
+  final TextOverflow? overflow;
+  final bool? softWrap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: languageNotifier,
+      builder: (_, lang, _) => Text(
+        trFor(lang, data),
+        style: style,
+        textAlign: textAlign,
+        maxLines: maxLines,
+        overflow: overflow,
+        softWrap: softWrap,
+      ),
+    );
+  }
+}
 
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 36});
@@ -59,24 +96,24 @@ class PageBody extends StatelessWidget {
                             ? context.pop()
                             : context.go(fallback),
                         icon: const Icon(Icons.arrow_back, size: 18),
-                        label: const Text('Back'),
+                        label: const Tx('Back'),
                       ),
                     const Spacer(),
                     if (stepLabel != null)
-                      Text(stepLabel!,
+                      Tx(stepLabel!,
                           style: const TextStyle(
                               fontSize: 11, color: C.muted, letterSpacing: .5)),
                     if (quickExit)
                       TextButton.icon(
                         onPressed: () => context.go('/quick-exit'),
                         icon: const Icon(Icons.exit_to_app, size: 18),
-                        label: const Text('Quick exit'),
+                        label: const Tx('Quick exit'),
                       ),
                   ]),
                 if (title != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8, bottom: 6),
-                    child: Text(title!,
+                    child: Tx(title!,
                         style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
@@ -85,7 +122,7 @@ class PageBody extends StatelessWidget {
                 if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(subtitle!,
+                    child: Tx(subtitle!,
                         style: const TextStyle(color: C.muted, height: 1.4)),
                   ),
                 ...children,
@@ -177,13 +214,13 @@ class InfoBox extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title,
+            Tx(title,
                 style: TextStyle(
                     color: fg, fontWeight: FontWeight.w700, fontSize: 14)),
             if (text != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text(text!,
+                child: Tx(text!,
                     style: const TextStyle(
                         fontSize: 13, color: C.ink, height: 1.4)),
               ),
@@ -205,7 +242,7 @@ class Pill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration:
             BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-        child: Text(label,
+        child: Tx(label,
             style: TextStyle(
                 color: fg, fontSize: 11, fontWeight: FontWeight.w600)),
       );
@@ -232,12 +269,12 @@ class PrimaryButton extends StatelessWidget {
         height: 52,
         child: icon == null
             ? FilledButton(
-                onPressed: onPressed, style: style, child: Text(label))
+                onPressed: onPressed, style: style, child: Tx(label))
             : FilledButton.icon(
                 onPressed: onPressed,
                 style: style,
                 icon: Icon(icon, size: 18),
-                label: Text(label)),
+                label: Tx(label)),
       ),
     );
   }
@@ -265,12 +302,12 @@ class SecondaryButton extends StatelessWidget {
         height: 52,
         child: icon == null
             ? OutlinedButton(
-                onPressed: onPressed, style: style, child: Text(label))
+                onPressed: onPressed, style: style, child: Tx(label))
             : OutlinedButton.icon(
                 onPressed: onPressed,
                 style: style,
                 icon: Icon(icon, size: 18),
-                label: Text(label)),
+                label: Tx(label)),
       ),
     );
   }
@@ -287,13 +324,13 @@ class SectionTitle extends StatelessWidget {
         padding: const EdgeInsets.only(top: 12, bottom: 10),
         child: Row(children: [
           Expanded(
-              child: Text(text,
+              child: Tx(text,
                   style: const TextStyle(
                       fontSize: 17, fontWeight: FontWeight.w700))),
           if (actionLabel != null)
             GestureDetector(
               onTap: onAction,
-              child: Text(actionLabel!,
+              child: Tx(actionLabel!,
                   style: const TextStyle(
                       color: C.primary,
                       fontWeight: FontWeight.w600,
@@ -360,7 +397,7 @@ class LabeledField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label,
+        Tx(label,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
         const SizedBox(height: 6),
         TextField(
@@ -371,8 +408,8 @@ class LabeledField extends StatelessWidget {
           maxLength: maxLength,
           onChanged: onChanged,
           decoration: InputDecoration(
-            hintText: hint,
-            helperText: helper,
+            hintText: hint == null ? null : tr(hint!),
+            helperText: helper == null ? null : tr(helper!),
             helperMaxLines: 3,
             filled: true,
             fillColor: Colors.white,
@@ -416,11 +453,11 @@ class OptionTile extends StatelessWidget {
           ],
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+              Tx(title, style: const TextStyle(fontWeight: FontWeight.w700)),
               if (subtitle != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(subtitle!,
+                  child: Tx(subtitle!,
                       style: const TextStyle(
                           color: C.muted, fontSize: 13, height: 1.4)),
                 ),
@@ -461,17 +498,17 @@ class StateView extends StatelessWidget {
             child: Icon(icon, size: 34, color: C.primary),
           ),
           const SizedBox(height: 16),
-          Text(title,
+          Tx(title,
               textAlign: TextAlign.center,
               style:
                   const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
-          Text(message,
+          Tx(message,
               textAlign: TextAlign.center,
               style: const TextStyle(color: C.muted, height: 1.4)),
           if (actionLabel != null) ...[
             const SizedBox(height: 16),
-            OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
+            OutlinedButton(onPressed: onAction, child: Tx(actionLabel!)),
           ],
         ]),
       );
@@ -480,5 +517,5 @@ class StateView extends StatelessWidget {
 void snack(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message)));
+    ..showSnackBar(SnackBar(content: Tx(message)));
 }

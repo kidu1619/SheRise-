@@ -43,10 +43,6 @@ class _CasesScreenState extends ConsumerState<CasesScreen> {
   Future<void> _track() async {
     final code = _code.text.trim();
     if (code.isEmpty) return;
-    if (!Repo.live) {
-      snack(context, 'Connect SheRise to the service to track a code.');
-      return;
-    }
     setState(() => _busy = true);
     try {
       final s = await Repo.trackStatus(code);
@@ -75,6 +71,7 @@ class _CasesScreenState extends ConsumerState<CasesScreen> {
 
     return PageBody(
       showBack: true,
+      fallback: '/home',
       title: 'My Cases',
       subtitle:
           'Private updates for reports you saved on this device. Reports are never shown publicly.',
@@ -96,11 +93,11 @@ class _CasesScreenState extends ConsumerState<CasesScreen> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(c.code,
+                        Tx(c.code,
                             style: const TextStyle(
                                 fontWeight: FontWeight.w800, letterSpacing: .5)),
                         const SizedBox(height: 4),
-                        Text(
+                        Tx(
                             '${c.category} · ${DateFormat('d MMM yyyy').format(c.createdAt)}',
                             style: const TextStyle(color: C.muted, fontSize: 12)),
                       ]),
@@ -125,6 +122,12 @@ class _CasesScreenState extends ConsumerState<CasesScreen> {
           text:
               'Anyone with a code can view that case. Codes saved here stay on this device. Remove a case if the device is shared.',
         ),
+        const SizedBox(height: 12),
+        SecondaryButton(
+          label: 'Back to home',
+          icon: Icons.arrow_back,
+          onPressed: () => context.go('/home'),
+        ),
       ],
     );
   }
@@ -144,7 +147,6 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
   bool _sending = false;
 
   Future<(CaseStatus?, List<CaseMessage>)> _load() async {
-    if (!Repo.live) return (null, <CaseMessage>[]);
     final s = await Repo.trackStatus(widget.code);
     final m = s == null ? <CaseMessage>[] : await Repo.messages(widget.code);
     return (s, m);
@@ -207,29 +209,23 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
             return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               AppCard(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(widget.code,
+                  Tx(widget.code,
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
                   statusPill(shown),
                   const SizedBox(height: 10),
-                  Text('Category: ${status?.category ?? local?.category ?? '—'}'),
+                  Tx('Category: ${status?.category ?? local?.category ?? '—'}'),
                   if (status != null)
-                    Text(
+                    Tx(
                         'Last update: ${DateFormat('d MMM yyyy, HH:mm').format(status.updatedAt.toLocal())}'),
                 ]),
               ),
-              if (!Repo.live)
-                const InfoBox(
-                  title: 'Demo mode',
-                  text:
-                      'Live status and messages appear once SheRise is connected to the service.',
-                ),
               const SectionTitle('Messages'),
               if (messages.isEmpty)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 12),
-                  child: Text('No messages yet.',
+                  child: Tx('No messages yet. Send a message below to reach the support team.',
                       style: TextStyle(color: C.muted)),
                 ),
               for (final m in messages)
@@ -247,27 +243,25 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                       border: Border.all(color: C.line),
                     ),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(m.sender == 'reporter' ? 'You' : 'Support team',
+                      Tx(m.sender == 'reporter' ? 'You' : (m.senderName ?? 'Support team'),
                           style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: C.muted)),
                       const SizedBox(height: 2),
-                      Text(m.body),
+                      Tx(m.body),
                     ]),
                   ),
                 ),
-              if (Repo.live) ...[
-                const SizedBox(height: 8),
-                LabeledField(
-                    label: 'Send a private message',
-                    controller: _msg,
-                    maxLines: 3),
-                PrimaryButton(
-                    label: _sending ? 'Sending…' : 'Send message',
-                    icon: Icons.send,
-                    onPressed: _sending ? null : _send),
-              ],
+              const SizedBox(height: 8),
+              LabeledField(
+                  label: 'Send a private message to case review officer',
+                  controller: _msg,
+                  maxLines: 3),
+              PrimaryButton(
+                  label: _sending ? 'Sending…' : 'Send message',
+                  icon: Icons.send,
+                  onPressed: _sending ? null : _send),
             ]);
           },
         ),
@@ -279,7 +273,12 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
             if (context.mounted) context.go('/home/cases');
           },
         ),
-        const Text(
+        SecondaryButton(
+          label: 'Back to all cases',
+          icon: Icons.arrow_back,
+          onPressed: () => context.canPop() ? context.pop() : context.go('/home/cases'),
+        ),
+        const Tx(
             'Removing a case only deletes the saved code on this device. It does not delete the report.',
             style: TextStyle(fontSize: 12, color: C.muted)),
       ],

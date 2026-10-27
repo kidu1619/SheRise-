@@ -4,46 +4,55 @@ import 'package:go_router/go_router.dart';
 import 'screens/cases_screen.dart';
 import 'screens/explore_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/institution_board_screen.dart';
+import 'screens/institution_case_detail_screen.dart';
 import 'screens/onboarding_screens.dart';
 import 'screens/profile_screen.dart';
 import 'screens/quick_exit_screen.dart';
 import 'screens/safety_screens.dart';
 import 'screens/safevoice_screens.dart';
 import 'screens/support_screen.dart';
+import 'i18n.dart';
 import 'theme.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
-    GoRoute(path: '/welcome', builder: (_, __) => const WelcomeScreen()),
-    GoRoute(path: '/signin', builder: (_, __) => const SignInScreen()),
-    GoRoute(path: '/signup', builder: (_, __) => const SignUpScreen()),
-    GoRoute(path: '/recover', builder: (_, __) => const RecoverScreen()),
-    GoRoute(path: '/quick-exit', builder: (_, __) => const QuickExitScreen()),
+    GoRoute(path: '/', builder: (_, _) => const SplashScreen()),
+    GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
+    GoRoute(path: '/signin', builder: (_, _) => const SignInScreen()),
+    GoRoute(path: '/signup', builder: (_, _) => const SignUpScreen()),
+    GoRoute(path: '/recover', builder: (_, _) => const RecoverScreen()),
+    GoRoute(path: '/quick-exit', builder: (_, _) => const QuickExitScreen()),
+    GoRoute(path: '/institution', builder: (_, _) => const InstitutionBoardScreen()),
+    GoRoute(
+      path: '/institution/case/:code',
+      builder: (_, state) =>
+          InstitutionCaseDetailScreen(code: state.pathParameters['code']!),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => _Shell(shell: shell),
       branches: [
         StatefulShellBranch(routes: [
           GoRoute(
             path: '/home',
-            builder: (_, __) => const HomeScreen(),
+            builder: (_, _) => const HomeScreen(),
             routes: [
               GoRoute(
                 path: 'safety',
-                builder: (_, __) => const SafetyCenterScreen(),
+                builder: (_, _) => const SafetyCenterScreen(),
                 routes: [
                   GoRoute(
                       path: 'share',
-                      builder: (_, __) => const ReviewSharingScreen()),
+                      builder: (_, _) => const ReviewSharingScreen()),
                   GoRoute(
                       path: 'plan',
-                      builder: (_, __) => const SafetyPlanScreen()),
+                      builder: (_, _) => const SafetyPlanScreen()),
                 ],
               ),
               GoRoute(
                 path: 'cases',
-                builder: (_, __) => const CasesScreen(),
+                builder: (_, _) => const CasesScreen(),
                 routes: [
                   GoRoute(
                     path: ':code',
@@ -56,33 +65,41 @@ final appRouter = GoRouter(
           ),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/explore', builder: (_, __) => const ExploreScreen()),
+          GoRoute(path: '/explore', builder: (_, _) => const ExploreScreen()),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
             path: '/report',
-            builder: (_, __) => const SafeVoiceStartScreen(),
+            builder: (_, _) => const SafeVoiceStartScreen(),
             routes: [
               GoRoute(
                   path: 'incident',
-                  builder: (_, __) => const IncidentScreen()),
+                  builder: (_, _) => const IncidentScreen()),
               GoRoute(
-                  path: 'details', builder: (_, __) => const DetailsScreen()),
+                  path: 'details', builder: (_, _) => const DetailsScreen()),
               GoRoute(
-                  path: 'privacy', builder: (_, __) => const PrivacyScreen()),
+                  path: 'privacy', builder: (_, _) => const PrivacyScreen()),
               GoRoute(
                 path: 'receipt',
-                builder: (_, state) =>
-                    ReceiptScreen(code: state.extra as String?),
+                builder: (_, state) {
+                  final e = state.extra;
+                  if (e is Map) {
+                    return ReceiptScreen(
+                      code: e['code'] as String?,
+                      failedUploads: (e['failed'] as int?) ?? 0,
+                    );
+                  }
+                  return ReceiptScreen(code: e is String ? e : null);
+                },
               ),
             ],
           ),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/support', builder: (_, __) => const SupportScreen()),
+          GoRoute(path: '/support', builder: (_, _) => const SupportScreen()),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+          GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
         ]),
       ],
     ),
@@ -103,32 +120,35 @@ class _Shell extends StatelessWidget {
           child: Scaffold(
             backgroundColor: C.bg,
             body: shell,
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: shell.currentIndex,
-              onDestinationSelected: (i) =>
-                  shell.goBranch(i, initialLocation: i == shell.currentIndex),
-              destinations: const [
-                NavigationDestination(
-                    icon: Icon(Icons.home_outlined),
-                    selectedIcon: Icon(Icons.home),
-                    label: 'Home'),
-                NavigationDestination(
-                    icon: Icon(Icons.explore_outlined),
-                    selectedIcon: Icon(Icons.explore),
-                    label: 'Explore'),
-                NavigationDestination(
-                    icon: Icon(Icons.shield_outlined),
-                    selectedIcon: Icon(Icons.shield),
-                    label: 'Report'),
-                NavigationDestination(
-                    icon: Icon(Icons.favorite_border),
-                    selectedIcon: Icon(Icons.favorite),
-                    label: 'Support'),
-                NavigationDestination(
-                    icon: Icon(Icons.person_outline),
-                    selectedIcon: Icon(Icons.person),
-                    label: 'Profile'),
-              ],
+            bottomNavigationBar: ValueListenableBuilder<String>(
+              valueListenable: languageNotifier,
+              builder: (_, lang, _) => NavigationBar(
+                selectedIndex: shell.currentIndex,
+                onDestinationSelected: (i) => shell.goBranch(i,
+                    initialLocation: i == shell.currentIndex),
+                destinations: [
+                  NavigationDestination(
+                      icon: const Icon(Icons.home_outlined),
+                      selectedIcon: const Icon(Icons.home),
+                      label: trFor(lang, 'Home')),
+                  NavigationDestination(
+                      icon: const Icon(Icons.explore_outlined),
+                      selectedIcon: const Icon(Icons.explore),
+                      label: trFor(lang, 'Explore')),
+                  NavigationDestination(
+                      icon: const Icon(Icons.shield_outlined),
+                      selectedIcon: const Icon(Icons.shield),
+                      label: trFor(lang, 'Report')),
+                  NavigationDestination(
+                      icon: const Icon(Icons.favorite_border),
+                      selectedIcon: const Icon(Icons.favorite),
+                      label: trFor(lang, 'Support')),
+                  NavigationDestination(
+                      icon: const Icon(Icons.person_outline),
+                      selectedIcon: const Icon(Icons.person),
+                      label: trFor(lang, 'Profile')),
+                ],
+              ),
             ),
           ),
         ),

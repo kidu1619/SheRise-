@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/repository.dart';
+import '../i18n.dart';
 import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -42,16 +43,16 @@ class _SplashScreenState extends State<SplashScreen> {
           const Row(mainAxisSize: MainAxisSize.min, children: [
             BrandMark(size: 40),
             SizedBox(width: 12),
-            Text('SheRise',
+            Tx('SheRise',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800)),
           ]),
           const SizedBox(height: 12),
-          const Text('Your safety. Your voice. Your future.',
+          const Tx('Your safety. Your voice. Your future.',
               style: TextStyle(color: C.muted)),
           const Spacer(flex: 3),
           const Padding(
             padding: EdgeInsets.all(20),
-            child: Text('Designed with care, for women and girls.',
+            child: Tx('Designed with care, for women and girls.',
                 style: TextStyle(color: C.muted, fontSize: 12)),
           ),
         ]),
@@ -104,7 +105,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final _controller = PageController();
   int _page = 0;
 
-  static const _languages = ['English', 'አማርኛ', 'Afaan Oromo', 'ትግርኛ'];
+  static const _languages = supportedLanguages;
 
   @override
   void dispose() {
@@ -132,14 +133,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 child: Row(children: [
                   const BrandMark(size: 32),
                   const SizedBox(width: 8),
-                  const Text('SheRise',
+                  const Tx('SheRise',
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                   const Spacer(),
                   if (!last)
                     TextButton(
                         onPressed: () => _goTo(_slides.length - 1),
-                        child: const Text('Skip introduction')),
+                        child: const Tx('Skip introduction')),
                 ]),
               ),
               Expanded(
@@ -169,25 +170,25 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               child: Icon(s.icon, size: 84, color: C.primary),
                             ),
                             const SizedBox(height: 20),
-                            Text(s.title,
+                            Tx(s.title,
                                 style: const TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.w800,
                                     height: 1.15)),
                             const SizedBox(height: 10),
-                            Text(s.body,
+                            Tx(s.body,
                                 style: const TextStyle(
                                     color: C.muted, height: 1.45)),
                             if (i == _slides.length - 1) ...[
                               const SizedBox(height: 18),
-                              const Text('Language',
+                              const Tx('Language',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w700)),
                               const SizedBox(height: 8),
                               Wrap(spacing: 8, children: [
                                 for (final l in _languages)
                                   ChoiceChip(
-                                    label: Text(l),
+                                    label: Tx(l),
                                     selected: language == l,
                                     onSelected: (_) => ref
                                         .read(languageProvider.notifier)
@@ -195,7 +196,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   ),
                               ]),
                               const SizedBox(height: 6),
-                              const Text(
+                              const Tx(
                                   'Your choice is saved. Full translations are coming.',
                                   style:
                                       TextStyle(color: C.muted, fontSize: 12)),
@@ -235,7 +236,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         onPressed: () => context.go('/signin')),
                     TextButton(
                         onPressed: () => context.go('/home'),
-                        child: const Text('Continue without an account')),
+                        child: const Tx('Continue without an account')),
                   ],
                 ]),
               ),
@@ -296,10 +297,10 @@ class _SignInScreenState extends State<SignInScreen> {
       children: [
         const BrandMark(size: 56),
         const SizedBox(height: 16),
-        const Text('Welcome back.',
+        const Tx('Welcome back.',
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
         const SizedBox(height: 6),
-        const Text(
+        const Tx(
             'Sign in for private case access, saved opportunities and your trusted contact.',
             style: TextStyle(color: C.muted, height: 1.4)),
         const SizedBox(height: 20),
@@ -316,7 +317,7 @@ class _SignInScreenState extends State<SignInScreen> {
           alignment: Alignment.centerRight,
           child: TextButton(
               onPressed: () => context.go('/recover'),
-              child: const Text('Forgot access?')),
+              child: const Tx('Forgot access?')),
         ),
         PrimaryButton(
             label: _busy ? 'Signing in…' : 'Sign in',
@@ -327,7 +328,7 @@ class _SignInScreenState extends State<SignInScreen> {
         Center(
           child: TextButton(
               onPressed: () => context.go('/home'),
-              child: const Text('Continue without an account')),
+              child: const Tx('Continue without an account')),
         ),
       ],
     );
@@ -415,7 +416,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           onChanged: (v) => setState(() => _agree = v ?? false),
           controlAffinity: ListTileControlAffinity.leading,
           contentPadding: EdgeInsets.zero,
-          title: const Text(
+          title: const Tx(
               'I understand how my information is used and who can see it.',
               style: TextStyle(fontSize: 13)),
         ),
@@ -472,7 +473,7 @@ class _RecoverScreenState extends State<RecoverScreen> {
       title: 'Recover your access',
       children: [
         if (!_sent) ...[
-          const Text(
+          const Tx(
               'Enter your email and we will send a link to reset your password.',
               style: TextStyle(color: C.muted, height: 1.4)),
           const SizedBox(height: 16),
@@ -500,7 +501,7 @@ class _RecoverScreenState extends State<RecoverScreen> {
         Center(
           child: TextButton(
               onPressed: () => context.go('/signin'),
-              child: const Text('Back to sign in')),
+              child: const Tx('Back to sign in')),
         ),
       ],
     );

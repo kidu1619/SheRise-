@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data/models.dart';
+import 'i18n.dart';
 
 /// Report draft lives in memory only. It is cleared when the app closes,
 /// because it can contain sensitive details.
@@ -94,11 +95,15 @@ class LanguageNotifier extends Notifier<String> {
 
   Future<void> _load() async {
     final p = await SharedPreferences.getInstance();
-    state = p.getString('language') ?? 'English';
+    final saved = p.getString('language') ?? 'English';
+    final l = supportedLanguages.contains(saved) ? saved : 'English';
+    state = l;
+    languageNotifier.value = l;
   }
 
   Future<void> set(String l) async {
     state = l;
+    languageNotifier.value = l;
     final p = await SharedPreferences.getInstance();
     await p.setString('language', l);
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/models.dart';
@@ -30,6 +31,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     return PageBody(
+      showBack: true,
+      fallback: '/home',
       title: 'Explore',
       subtitle: 'Opportunities to grow, and knowledge to stay safe and strong.',
       children: [
@@ -37,8 +40,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
           width: double.infinity,
           child: SegmentedButton<int>(
             segments: const [
-              ButtonSegment(value: 0, label: Text('Opportunities')),
-              ButtonSegment(value: 1, label: Text('Learn')),
+              ButtonSegment(value: 0, label: Tx('Opportunities')),
+              ButtonSegment(value: 1, label: Tx('Learn')),
             ],
             selected: {_tab},
             onSelectionChanged: (s) => setState(() => _tab = s.first),
@@ -46,6 +49,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ),
         const SizedBox(height: 16),
         if (_tab == 0) ..._opportunities() else ..._learn(),
+        const SizedBox(height: 16),
+        SecondaryButton(
+          label: 'Back to home',
+          icon: Icons.arrow_back,
+          onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+        ),
       ],
     );
   }
@@ -58,7 +67,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
-                  label: Text(f == 'all' ? 'All' : kindLabels[f]!),
+                  label: Tx(f == 'all' ? 'All' : kindLabels[f]!),
                   selected: _filter == f,
                   onSelected: (_) => setState(() => _filter = f),
                 ),
@@ -103,18 +112,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         Pill(
                             '${o.sample ? 'Sample listing · ' : ''}${kindLabels[o.kind] ?? o.kind}'),
                         const SizedBox(height: 10),
-                        Text(o.title,
+                        Tx(o.title,
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 4),
-                        Text(
+                        Tx(
                             [o.location, o.deadline]
                                 .where((e) => e.isNotEmpty)
                                 .join(' · '),
                             style:
                                 const TextStyle(color: C.muted, fontSize: 12)),
                         const SizedBox(height: 8),
-                        const Text('View details →',
+                        const Tx('View details →',
                             style: TextStyle(
                                 color: C.primary,
                                 fontWeight: FontWeight.w600,
@@ -143,20 +152,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Pill(kindLabels[o.kind] ?? o.kind),
             const SizedBox(height: 10),
-            Text(o.title,
+            Tx(o.title,
                 style:
                     const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
-            Text([o.location, o.deadline].where((e) => e.isNotEmpty).join(' · '),
+            Tx([o.location, o.deadline].where((e) => e.isNotEmpty).join(' · '),
                 style: const TextStyle(color: C.muted)),
             const SizedBox(height: 14),
-            if (o.summary.isNotEmpty) Text(o.summary),
+            if (o.summary.isNotEmpty) Tx(o.summary),
             if (o.eligibility.isNotEmpty) ...[
               const SizedBox(height: 14),
-              const Text('Who can apply',
+              const Tx('Who can apply',
                   style: TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
-              Text(o.eligibility),
+              Tx(o.eligibility),
             ],
             const SizedBox(height: 18),
             if (o.url != null)
@@ -165,7 +174,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   icon: Icons.open_in_new,
                   onPressed: () => launchUrl(Uri.parse(o.url!))),
             if (o.sample)
-              const Text('This is a sample listing for demonstration.',
+              const Tx('This is a sample listing for demonstration.',
                   style: TextStyle(fontSize: 12, color: C.muted)),
           ]),
         ),
@@ -208,12 +217,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
           child: ExpansionTile(
             shape: const Border(),
             collapsedShape: const Border(),
-            title: Text(t.$1,
+            title: Tx(t.$1,
                 style:
                     const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
             childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             expandedCrossAxisAlignment: CrossAxisAlignment.start,
-            children: [Text(t.$2, style: const TextStyle(height: 1.5))],
+            children: [Tx(t.$2, style: const TextStyle(height: 1.5))],
           ),
         ),
       const InfoBox(

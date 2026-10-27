@@ -18,7 +18,7 @@ Future<void> _editContact(
   await showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Trusted contact'),
+      title: const Tx('Trusted contact'),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
@@ -33,7 +33,7 @@ Future<void> _editContact(
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(labelText: 'Phone number')),
           const SizedBox(height: 8),
-          const Text('Stored only on this device.',
+          const Tx('Stored only on this device.',
               style: TextStyle(fontSize: 12, color: C.muted)),
         ]),
       ),
@@ -44,9 +44,9 @@ Future<void> _editContact(
                 ref.read(contactProvider.notifier).set(null);
                 Navigator.pop(ctx);
               },
-              child: const Text('Remove')),
+              child: const Tx('Remove')),
         TextButton(
-            onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx), child: const Tx('Cancel')),
         FilledButton(
             onPressed: () {
               if (name.text.trim().isEmpty || phone.text.trim().isEmpty) return;
@@ -57,7 +57,7 @@ Future<void> _editContact(
                   ));
               Navigator.pop(ctx);
             },
-            child: const Text('Save')),
+            child: const Tx('Save')),
       ],
     ),
   );
@@ -90,9 +90,9 @@ class SafetyCenterScreen extends ConsumerWidget {
             const SizedBox(width: 12),
             const Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Take one safe step.',
+                Tx('Take one safe step.',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                Text('No automatic alerts or dispatch.',
+                Tx('No automatic alerts or dispatch.',
                     style: TextStyle(color: C.muted, fontSize: 12)),
               ]),
             ),
@@ -108,27 +108,20 @@ class SafetyCenterScreen extends ConsumerWidget {
         const SectionTitle('Emergency resources'),
         AppCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (AppConfig.emergencyContacts.isEmpty) ...[
-              const Pill('Verification required before launch',
-                  bg: C.warnBg, fg: C.warn),
-              const SizedBox(height: 10),
-              const Text('Local emergency call',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              const Text(
-                  'No verified emergency number is configured yet. Confirm current local resources before relying on this screen.',
-                  style: TextStyle(fontSize: 13, color: C.muted, height: 1.4)),
-              const SizedBox(height: 12),
-              const SecondaryButton(
-                  label: 'Emergency call · not configured', onPressed: null),
-            ] else
-              for (final e in AppConfig.emergencyContacts)
-                PrimaryButton(
-                  label: 'Call ${e.label} · ${e.number}',
-                  icon: Icons.call,
-                  onPressed: () => launchUrl(Uri.parse('tel:${e.number}')),
-                ),
-            const Text('Calls only start when you tap. Nothing is dialed automatically.',
+            const Pill('Confirm numbers before relying on them',
+                bg: C.warnBg, fg: C.warn),
+            const SizedBox(height: 4),
+            Tx('Last checked ${AppConfig.emergencyNumbersCheckedOn} from public sources.',
+                style: const TextStyle(fontSize: 12, color: C.muted)),
+            const SizedBox(height: 12),
+            if (AppConfig.emergencyContacts.isEmpty)
+              const Tx(
+                  'No verified emergency number is configured yet.',
+                  style: TextStyle(fontSize: 13, color: C.muted))
+            else
+              for (final e in AppConfig.emergencyContacts) _EmergencyRow(e),
+            const Tx(
+                'Calls only start when you tap. Nothing is dialed automatically.',
                 style: TextStyle(fontSize: 12, color: C.muted)),
           ]),
         ),
@@ -138,12 +131,12 @@ class SafetyCenterScreen extends ConsumerWidget {
         if (contact == null)
           AppCard(
             child: Column(children: [
-              const Text('No trusted contact yet.',
+              const Tx('No trusted contact yet.',
                   style: TextStyle(color: C.muted)),
               const SizedBox(height: 8),
               OutlinedButton(
                   onPressed: () => _editContact(context, ref, null),
-                  child: const Text('Add a trusted contact')),
+                  child: const Tx('Add a trusted contact')),
             ]),
           )
         else
@@ -152,16 +145,16 @@ class SafetyCenterScreen extends ConsumerWidget {
               Row(children: [
                 CircleAvatar(
                     backgroundColor: C.tint,
-                    child: Text(contact.name[0].toUpperCase(),
+                    child: Tx(contact.name[0].toUpperCase(),
                         style: const TextStyle(color: C.primary))),
                 const SizedBox(width: 12),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(
+                  Tx(
                       contact.relation.isEmpty
                           ? contact.name
                           : '${contact.name} — ${contact.relation}',
                       style: const TextStyle(fontWeight: FontWeight.w700)),
-                  Text('Contact • ${contact.masked}',
+                  Tx('Contact • ${contact.masked}',
                       style: const TextStyle(fontSize: 12, color: C.muted)),
                 ]),
               ]),
@@ -176,9 +169,9 @@ class SafetyCenterScreen extends ConsumerWidget {
           child: Row(children: [
             const Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Share my location',
+                Tx('Share my location',
                     style: TextStyle(fontWeight: FontWeight.w700)),
-                Text('Not available in this version',
+                Tx('Not available in this version',
                     style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
@@ -193,9 +186,9 @@ class SafetyCenterScreen extends ConsumerWidget {
             SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('My safety plan',
+                Tx('My safety plan',
                     style: TextStyle(fontWeight: FontWeight.w700)),
-                Text('A simple checklist, kept on this device',
+                Tx('A simple checklist, kept on this device',
                     style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
@@ -205,15 +198,21 @@ class SafetyCenterScreen extends ConsumerWidget {
         const SectionTitle('While you find support'),
         AppCard(
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('• Move to a public or safer place if possible.'),
+            Tx('• Move to a public or safer place if possible.'),
             SizedBox(height: 8),
-            Text('• Contact a trusted person using a safe device.'),
+            Tx('• Contact a trusted person using a safe device.'),
             SizedBox(height: 8),
-            Text('• If a message fails, use another way to reach help.'),
+            Tx('• If a message fails, use another way to reach help.'),
           ]),
         ),
-        const Text('SheRise does not automatically contact emergency services.',
+        const Tx('SheRise does not automatically contact emergency services.',
             style: TextStyle(fontSize: 12, color: C.muted)),
+        const SizedBox(height: 12),
+        SecondaryButton(
+          label: 'Back to home',
+          icon: Icons.arrow_back,
+          onPressed: () => context.go('/home'),
+        ),
       ],
     );
   }
@@ -278,17 +277,17 @@ class _ReviewSharingScreenState extends ConsumerState<ReviewSharingScreen> {
         else ...[
           AppCard(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
+              Tx(
                   contact.relation.isEmpty
                       ? contact.name
                       : '${contact.name} — ${contact.relation}',
                   style: const TextStyle(
                       fontWeight: FontWeight.w700, fontSize: 17)),
               const SizedBox(height: 4),
-              Text('Masked contact • ${contact.masked}',
+              Tx('Masked contact • ${contact.masked}',
                   style: const TextStyle(color: C.muted, fontSize: 13)),
               const SizedBox(height: 6),
-              const Text('Check this is the right person before continuing.',
+              const Tx('Check this is the right person before continuing.',
                   style: TextStyle(fontSize: 12, color: C.muted)),
             ]),
           ),
@@ -305,7 +304,7 @@ class _ReviewSharingScreenState extends ConsumerState<ReviewSharingScreen> {
             onChanged: (v) => setState(() => _reviewed = v ?? false),
             controlAffinity: ListTileControlAffinity.leading,
             contentPadding: EdgeInsets.zero,
-            title: const Text(
+            title: const Tx(
                 'I have reviewed the recipient and message and choose to share only these details.',
                 style: TextStyle(fontSize: 13)),
           ),
@@ -314,9 +313,15 @@ class _ReviewSharingScreenState extends ConsumerState<ReviewSharingScreen> {
               label: 'Review, then share',
               icon: Icons.send,
               onPressed: _reviewed ? () => _share(contact) : null),
-          const Text(
+          const Tx(
               'Delivery stays unconfirmed. SheRise cannot tell whether the message arrived.',
               style: TextStyle(fontSize: 12, color: C.muted)),
+          const SizedBox(height: 12),
+          SecondaryButton(
+            label: 'Back to Safety Center',
+            icon: Icons.arrow_back,
+            onPressed: () => context.canPop() ? context.pop() : context.go('/home/safety'),
+          ),
         ],
       ],
     );
@@ -355,7 +360,7 @@ class SafetyPlanScreen extends ConsumerWidget {
               value: done.contains(item),
               onChanged: (_) => ref.read(planProvider.notifier).toggle(item),
               controlAffinity: ListTileControlAffinity.leading,
-              title: Text(item, style: const TextStyle(fontSize: 14)),
+              title: Tx(item, style: const TextStyle(fontSize: 14)),
             ),
           ),
         const SizedBox(height: 8),
@@ -365,7 +370,42 @@ class SafetyPlanScreen extends ConsumerWidget {
           text:
               'Your situation is unique. A trained gender-based-violence or counseling service can help you build a plan that fits your safety.',
         ),
+        const SizedBox(height: 12),
+        SecondaryButton(
+          label: 'Back to Safety Center',
+          icon: Icons.arrow_back,
+          onPressed: () => context.canPop() ? context.pop() : context.go('/home/safety'),
+        ),
       ],
     );
   }
+}
+
+
+class _EmergencyRow extends StatelessWidget {
+  const _EmergencyRow(this.contact);
+  final EmergencyContact contact;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Tx(contact.label,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+              if (contact.note.isNotEmpty)
+                Tx(contact.note,
+                    style: const TextStyle(fontSize: 12, color: C.muted)),
+            ]),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: C.danger),
+            onPressed: () => launchUrl(Uri.parse('tel:${contact.number}')),
+            icon: const Icon(Icons.call, size: 18),
+            label: Tx(contact.number),
+          ),
+        ]),
+      );
 }
