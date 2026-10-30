@@ -196,8 +196,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   ),
                               ]),
                               const SizedBox(height: 6),
-                              const Tx(
-                                  'Your choice is saved. Full translations are coming.',
+                              const Tx('Your choice is saved.',
                                   style:
                                       TextStyle(color: C.muted, fontSize: 12)),
                             ],
@@ -268,14 +267,34 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _submit() async {
+    final email = _email.text.trim();
+    final password = _password.text;
+
     if (!Repo.live) {
+      if (Repo.isStaffEmail(email)) {
+        final ok = await Repo.staffLogin(email, password);
+        if (ok) {
+          if (mounted) context.go('/board');
+          return;
+        } else {
+          if (mounted) snack(context, 'Invalid staff credentials');
+          return;
+        }
+      }
       context.go('/home');
       return;
     }
     setState(() => _busy = true);
     try {
-      await Repo.signIn(_email.text.trim(), _password.text);
-      if (mounted) context.go('/home');
+      await Repo.signIn(email, password);
+      final access = await Repo.myAccess();
+      if (mounted) {
+        if (access.isStaff) {
+          context.go('/board');
+        } else {
+          context.go('/home');
+        }
+      }
     } on AuthException catch (e) {
       if (mounted) {
         setState(() => _busy = false);
@@ -295,7 +314,10 @@ class _SignInScreenState extends State<SignInScreen> {
       showBack: true,
       fallback: '/welcome',
       children: [
-        const BrandMark(size: 56),
+        GestureDetector(
+          onLongPress: () => context.push('/board/login'),
+          child: const BrandMark(size: 56),
+        ),
         const SizedBox(height: 16),
         const Tx('Welcome back.',
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
@@ -424,12 +446,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         PrimaryButton(
             label: _busy ? 'Creating…' : 'Create account',
             onPressed: (_agree && !_busy) ? _submit : null),
-        const InfoBox(
-          icon: Icons.lock_outline,
-          title: 'You do not need an account to use SheRise',
-          text:
-              'You can read resources and submit an anonymous report without one.',
-        ),
       ],
     );
   }

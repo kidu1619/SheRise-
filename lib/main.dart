@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
+import 'i18n.dart';
 import 'router.dart';
 import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initLanguage();
 
   if (AppConfig.isConfigured) {
     await Supabase.initialize(

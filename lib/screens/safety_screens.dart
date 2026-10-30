@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
 import '../data/models.dart';
+import '../i18n.dart';
 import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -23,15 +24,15 @@ Future<void> _editContact(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
               controller: name,
-              decoration: const InputDecoration(labelText: 'Name')),
+              decoration: InputDecoration(labelText: tr('Name'))),
           TextField(
               controller: relation,
               decoration:
-                  const InputDecoration(labelText: 'Relationship (e.g. sister)')),
+                  InputDecoration(labelText: tr('Relationship (e.g. sister)'))),
           TextField(
               controller: phone,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'Phone number')),
+              decoration: InputDecoration(labelText: tr('Phone number'))),
           const SizedBox(height: 8),
           const Tx('Stored only on this device.',
               style: TextStyle(fontSize: 12, color: C.muted)),
@@ -221,9 +222,15 @@ class ReviewSharingScreen extends ConsumerStatefulWidget {
 }
 
 class _ReviewSharingScreenState extends ConsumerState<ReviewSharingScreen> {
-  final _message = TextEditingController(
-      text: 'Please contact me when you can. I would like support.');
+  late final TextEditingController _message;
   bool _reviewed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _message = TextEditingController(
+        text: tr('Please contact me when you can. I would like support.'));
+  }
 
   @override
   void dispose() {

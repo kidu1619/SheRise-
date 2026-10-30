@@ -11,16 +11,15 @@ import '../widgets.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
-  static const _languages = supportedLanguages;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final language = ref.watch(languageProvider);
     final signedIn = Repo.signedIn;
-    final name = Repo.displayName ?? (signedIn ? 'Your account' : 'Guest');
+    final name = Repo.displayName ?? (signedIn ? tr('Your account') : tr('Guest'));
 
     return PageBody(
       title: 'Profile & help',
+      showLanguageButton: false,
       children: [
         AppCard(
           child: Row(children: [
@@ -57,28 +56,7 @@ class ProfileScreen extends ConsumerWidget {
           icon: Icons.language,
           title: 'Language',
           sub: language,
-          onTap: () => showModalBottomSheet<void>(
-            context: context,
-            builder: (ctx) => SafeArea(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                for (final l in _languages)
-                  ListTile(
-                    title: Tx(l),
-                    trailing:
-                        language == l ? const Icon(Icons.check, color: C.primary) : null,
-                    onTap: () {
-                      ref.read(languageProvider.notifier).set(l);
-                      Navigator.pop(ctx);
-                    },
-                  ),
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Tx('Full translations are coming.',
-                      style: TextStyle(color: C.muted, fontSize: 12)),
-                ),
-              ]),
-            ),
-          ),
+          onTap: () => showLanguagePicker(context),
         ),
         _Setting(
           icon: Icons.shield_outlined,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../data/models.dart';
 import '../data/repository.dart';
+import '../i18n.dart';
 import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -100,9 +100,13 @@ class _CasesScreenState extends ConsumerState<CasesScreen> {
                             style: const TextStyle(
                                 fontWeight: FontWeight.w800, letterSpacing: .5)),
                         const SizedBox(height: 4),
-                        Tx(
-                            '${c.category} · ${DateFormat('d MMM yyyy').format(c.createdAt)}',
-                            style: const TextStyle(color: C.muted, fontSize: 12)),
+                        ValueListenableBuilder<String>(
+                          valueListenable: languageNotifier,
+                          builder: (_, lang, _) => Text(
+                            '${trFor(lang, c.category)} · ${formatLocalizedDate(c.createdAt, lang)}',
+                            style: const TextStyle(color: C.muted, fontSize: 12),
+                          ),
+                        ),
                       ]),
                 ),
                 statusPill(c.status),
@@ -213,10 +217,34 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                   const SizedBox(height: 8),
                   statusPill(shown),
                   const SizedBox(height: 10),
-                  Tx('Category: ${status?.category ?? local?.category ?? '—'}'),
-                  if (status != null)
-                    Tx(
-                        'Last update: ${DateFormat('d MMM yyyy, HH:mm').format(status.updatedAt.toLocal())}'),
+                  ValueListenableBuilder<String>(
+                    valueListenable: languageNotifier,
+                    builder: (_, lang, _) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${trFor(lang, 'Category: ')}${trFor(lang, status?.category ?? local?.category ?? '—')}',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        if (status != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${trFor(lang, 'Last update: ')}${formatLocalizedDateTime(status.updatedAt.toLocal(), lang)}',
+                              style: const TextStyle(fontSize: 13, color: C.muted),
+                            ),
+                          ),
+                        if (status?.institutionName != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${trFor(lang, 'Institution: ')}${trFor(lang, status!.institutionName!)}',
+                              style: const TextStyle(fontSize: 13, color: C.muted),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ]),
               ),
               if (!Repo.live)

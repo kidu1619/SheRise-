@@ -90,12 +90,12 @@ class LanguageNotifier extends Notifier<String> {
   @override
   String build() {
     _load();
-    return 'English';
+    return languageNotifier.value;
   }
 
   Future<void> _load() async {
     final p = await SharedPreferences.getInstance();
-    final saved = p.getString('language') ?? 'English';
+    final saved = p.getString('language') ?? languageNotifier.value;
     final l = supportedLanguages.contains(saved) ? saved : 'English';
     state = l;
     languageNotifier.value = l;
@@ -103,9 +103,7 @@ class LanguageNotifier extends Notifier<String> {
 
   Future<void> set(String l) async {
     state = l;
-    languageNotifier.value = l;
-    final p = await SharedPreferences.getInstance();
-    await p.setString('language', l);
+    await setAppLanguage(l);
   }
 }
 

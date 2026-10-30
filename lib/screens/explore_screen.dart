@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/models.dart';
 import '../data/repository.dart';
+import '../i18n.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
@@ -17,6 +20,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   int _tab = 0;
   late Future<List<Opportunity>> _future = Repo.opportunities();
   String _filter = 'all';
+  Timer? _refreshTimer;
 
   static const _filters = [
     'all',
@@ -28,10 +32,34 @@ class _ExploreScreenState extends State<ExploreScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-refresh opportunities every 5 minutes.
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      if (mounted) setState(() => _future = Repo.opportunities());
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _refresh() => setState(() => _future = Repo.opportunities());
+
+  @override
   Widget build(BuildContext context) {
     return PageBody(
       title: 'Explore',
       subtitle: 'Opportunities to grow, and knowledge to stay safe and strong.',
+      actions: [
+        IconButton(
+          tooltip: 'Refresh',
+          icon: const Icon(Icons.refresh, color: C.primary),
+          onPressed: _refresh,
+        ),
+      ],
       children: [
         SizedBox(
           width: double.infinity,
@@ -80,7 +108,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 title: 'Could not load opportunities',
                 message: 'Check your connection and try again.',
                 actionLabel: 'Try again',
-                onAction: () => setState(() => _future = Repo.opportunities()),
+                onAction: _refresh,
               );
             }
             final list = (snap.data ?? [])
@@ -93,35 +121,59 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 message: 'Nothing matches this filter. Check back soon.',
               );
             }
-            return Column(children: [
-              for (final o in list)
-                AppCard(
-                  onTap: () => _showDetails(o),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Pill(
-                            '${o.sample ? 'Sample listing · ' : ''}${kindLabels[o.kind] ?? o.kind}'),
-                        const SizedBox(height: 10),
-                        Tx(o.title,
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 4),
-                        Tx(
-                            [o.location, o.deadline]
-                                .where((e) => e.isNotEmpty)
-                                .join(' · '),
-                            style:
-                                const TextStyle(color: C.muted, fontSize: 12)),
-                        const SizedBox(height: 8),
-                        const Tx('View details →',
-                            style: TextStyle(
-                                color: C.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13)),
-                      ]),
-                ),
-            ]);
+            return RefreshIndicator(
+              onRefresh: () async => _refresh(),
+              child: Column(children: [
+                for (final o in list)
+                  AppCard(
+                    onTap: () => _showDetails(o),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Pill(
+                              '${o.sample ? 'Sample listing · ' : ''}${kindLabels[o.kind] ?? o.kind}'),
+                          const SizedBox(height: 10),
+                          Tx(o.title,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 4),
+                          ValueListenableBuilder<String>(
+                            valueListenable: languageNotifier,
+                            builder: (_, lang, _) => Text(
+                              [o.location, o.deadline]
+                                  .where((e) => e.isNotEmpty)
+                                  .map((e) => trFor(lang, e))
+                                  .join(' · '),
+                              style:
+                                  const TextStyle(color: C.muted, fontSize: 12),
+                            ),
+                          ),
+                          if (o.postedAt != null) ...[
+                            const SizedBox(height: 2),
+                            Builder(builder: (context) {
+                              final days = DateTime.now()
+                                  .difference(o.postedAt!)
+                                  .inDays;
+                              final label = days == 0
+                                  ? 'Posted today'
+                                  : days == 1
+                                      ? 'Posted 1 day ago'
+                                      : 'Posted $days days ago';
+                              return Tx(label,
+                                  style: const TextStyle(
+                                      color: C.muted, fontSize: 11));
+                            }),
+                          ],
+                          const SizedBox(height: 8),
+                          const Tx('View details →',
+                              style: TextStyle(
+                                  color: C.primary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13)),
+                        ]),
+                  ),
+              ]),
+            );
           },
         ),
         const InfoBox(
@@ -147,8 +199,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 style:
                     const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
-            Tx([o.location, o.deadline].where((e) => e.isNotEmpty).join(' · '),
-                style: const TextStyle(color: C.muted)),
+            ValueListenableBuilder<String>(
+              valueListenable: languageNotifier,
+              builder: (_, lang, _) => Text(
+                [o.location, o.deadline]
+                    .where((e) => e.isNotEmpty)
+                    .map((e) => trFor(lang, e))
+                    .join(' · '),
+                style: const TextStyle(color: C.muted),
+              ),
+            ),
             const SizedBox(height: 14),
             if (o.summary.isNotEmpty) Tx(o.summary),
             if (o.eligibility.isNotEmpty) ...[
@@ -163,7 +223,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
               PrimaryButton(
                   label: 'Open application page',
                   icon: Icons.open_in_new,
-                  onPressed: () => launchUrl(Uri.parse(o.url!))),
+                  onPressed: () => launchUrl(
+                        Uri.parse(o.url!),
+                        mode: LaunchMode.externalApplication,
+                      )),
             if (o.sample)
               const Tx('This is a sample listing for demonstration.',
                   style: TextStyle(fontSize: 12, color: C.muted)),

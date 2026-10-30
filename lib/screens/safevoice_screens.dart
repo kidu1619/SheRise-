@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../data/models.dart';
 import '../data/repository.dart';
+import '../i18n.dart';
 import '../state.dart';
 import '../theme.dart';
 import 'evidence_section.dart';
@@ -22,59 +22,81 @@ class SafeVoiceStartScreen extends ConsumerWidget {
     return PageBody(
       quickExit: true,
       title: 'Your voice matters.',
-      subtitle:
-          'Tell us what happened, in your own words. You are in control of how much you share.',
+      subtitle: 'Tell us what happened, in your own words. You are in control of how much you share.',
       children: [
         const InfoBox(
           icon: Icons.warning_amber_rounded,
           tone: Tone.warn,
           title: 'Not an emergency service',
-          text:
-              'If you may be in danger now, open the Safety Center. Reporting here does not call emergency services.',
+          text: 'If you may be in danger now, open the Safety Center. Reporting here does not call emergency services.',
         ),
         AppCard(
           color: C.tint,
           border: C.tintBorder,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-            Tx('Choose how to speak up',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-            SizedBox(height: 12),
-            Tx('Anonymous', style: TextStyle(fontWeight: FontWeight.w700)),
-            SizedBox(height: 4),
-            Tx(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Tx(
+                'Choose how to speak up',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              ),
+              SizedBox(height: 12),
+              Tx('Anonymous', style: TextStyle(fontWeight: FontWeight.w700)),
+              SizedBox(height: 4),
+              Tx(
                 'No name, email, phone or account is needed. Evidence and technical information may still reveal identity; anonymity cannot be guaranteed.',
-                style: TextStyle(fontSize: 13, color: C.muted, height: 1.4)),
-            SizedBox(height: 12),
-            Tx('Confidential', style: TextStyle(fontWeight: FontWeight.w700)),
-            SizedBox(height: 4),
-            Tx(
+                style: TextStyle(fontSize: 13, color: C.muted, height: 1.4),
+              ),
+              SizedBox(height: 12),
+              Tx('Confidential', style: TextStyle(fontWeight: FontWeight.w700)),
+              SizedBox(height: 4),
+              Tx(
                 'Your report is linked to your account so authorized support staff can follow up, within the stated limits.',
-                style: TextStyle(fontSize: 13, color: C.muted, height: 1.4)),
-          ]),
+                style: TextStyle(fontSize: 13, color: C.muted, height: 1.4),
+              ),
+            ],
+          ),
         ),
         const SectionTitle('How reporting works'),
         AppCard(
-          child: Column(children: const [
-            _Step(1, 'Choose an incident category', 'Use a broad location, if you wish.'),
-            SizedBox(height: 12),
-            _Step(2, 'Share details at your own pace', 'Evidence is always optional.'),
-            SizedBox(height: 12),
-            _Step(3, 'Review privacy, then submit', 'Keep your private case access code.'),
-          ]),
+          child: Column(
+            children: const [
+              _Step(
+                1,
+                'Choose an incident category',
+                'Use a broad location, if you wish.',
+              ),
+              SizedBox(height: 12),
+              _Step(
+                2,
+                'Share details at your own pace',
+                'Evidence is always optional.',
+              ),
+              SizedBox(height: 12),
+              _Step(
+                3,
+                'Review privacy, then submit',
+                'Keep your private case access code.',
+              ),
+            ],
+          ),
         ),
         PrimaryButton(
-            label: 'Start a report',
-            icon: Icons.arrow_forward,
-            onPressed: () => context.push('/report/incident')),
+          label: 'Start a report',
+          icon: Icons.arrow_forward,
+          onPressed: () => context.push('/report/incident'),
+        ),
         SecondaryButton(
-            label: 'Resume private draft',
-            icon: Icons.edit_note,
-            onPressed: draft.isEmpty
-                ? null
-                : () => context.push('/report/incident')),
+          label: 'Resume private draft',
+          icon: Icons.edit_note,
+          onPressed: draft.isEmpty
+              ? null
+              : () => context.push('/report/incident'),
+        ),
         const Tx(
-            'Drafts are kept only while the app stays open, because they can contain sensitive details.',
-            style: TextStyle(fontSize: 12, color: C.muted)),
+          'Drafts are kept only while the app stays open, because they can contain sensitive details.',
+          style: TextStyle(fontSize: 12, color: C.muted),
+        ),
       ],
     );
   }
@@ -87,22 +109,32 @@ class _Step extends StatelessWidget {
   final String sub;
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-        CircleAvatar(
-          radius: 13,
-          backgroundColor: C.tint,
-          child: Tx('$n',
-              style: const TextStyle(
-                  fontSize: 12, color: C.primary, fontWeight: FontWeight.w700)),
+  Widget build(BuildContext context) => Row(
+    children: [
+      CircleAvatar(
+        radius: 13,
+        backgroundColor: C.tint,
+        child: Tx(
+          '$n',
+          style: const TextStyle(
+            fontSize: 12,
+            color: C.primary,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Tx(title, style: const TextStyle(fontWeight: FontWeight.w600)),
             Tx(sub, style: const TextStyle(fontSize: 12, color: C.muted)),
-          ]),
+          ],
         ),
-      ]);
+      ),
+    ],
+  );
 }
 
 // ------------------------------------------------------------- Incident
@@ -164,11 +196,14 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
       children: [
         const StepBar(1),
         const Tx(
-            'Choose the closest category. You do not need to have every detail or be sure how to describe it.',
-            style: TextStyle(color: C.muted, height: 1.4)),
+          'Choose the closest category. You do not need to have every detail or be sure how to describe it.',
+          style: TextStyle(color: C.muted, height: 1.4),
+        ),
         const SizedBox(height: 14),
-        const Tx('Incident category · Required',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        const Tx(
+          'Incident category · Required',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 8),
         for (final c in _categories)
           OptionTile(
@@ -178,28 +213,42 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
             onTap: () => notifier.patch((x) => x.copyWith(category: c.$1)),
           ),
         const SizedBox(height: 8),
-        const Tx('Approximate date (optional)',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        const Tx(
+          'Approximate date (optional)',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 6),
         AppCard(
           onTap: _pickDate,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           bottom: 4,
-          child: Row(children: [
-            Expanded(
-                child: Tx(
+          child: Row(
+            children: [
+              Expanded(
+                child: ValueListenableBuilder<String>(
+                  valueListenable: languageNotifier,
+                  builder: (_, lang, _) => Tx(
                     d.date == null
-                        ? 'Choose a month'
-                        : DateFormat('MMMM yyyy').format(d.date!),
-                    style: TextStyle(
-                        color: d.date == null ? C.muted : C.ink))),
-            const Icon(Icons.calendar_today_outlined, size: 18, color: C.muted),
-          ]),
+                        ? trFor(lang, 'Choose a month')
+                        : formatLocalizedMonthYear(d.date!, lang),
+                    style: TextStyle(color: d.date == null ? C.muted : C.ink),
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.calendar_today_outlined,
+                size: 18,
+                color: C.muted,
+              ),
+            ],
+          ),
         ),
         const Padding(
           padding: EdgeInsets.only(bottom: 14),
-          child: Tx('An approximate month is enough. You can leave this blank.',
-              style: TextStyle(fontSize: 12, color: C.muted)),
+          child: Tx(
+            'An approximate month is enough. You can leave this blank.',
+            style: TextStyle(fontSize: 12, color: C.muted),
+          ),
         ),
         LabeledField(
           label: 'Broad location (optional)',
@@ -214,14 +263,16 @@ class _IncidentScreenState extends ConsumerState<IncidentScreen> {
           text: 'GPS is not requested or shared in this report.',
         ),
         PrimaryButton(
-            label: 'Continue to details',
-            onPressed: d.category == null
-                ? null
-                : () => context.push('/report/details')),
+          label: 'Continue to details',
+          onPressed: d.category == null
+              ? null
+              : () => context.push('/report/details'),
+        ),
         SecondaryButton(
-            label: 'Save private draft',
-            onPressed: () =>
-                snack(context, 'Draft kept while the app stays open.')),
+          label: 'Save private draft',
+          onPressed: () =>
+              snack(context, 'Draft kept while the app stays open.'),
+        ),
       ],
     );
   }
@@ -265,8 +316,9 @@ class _DetailsScreenState extends ConsumerState<DetailsScreen> {
       children: [
         const StepBar(2),
         const Tx(
-            'Only include what feels safe to share. Names, precise addresses and identifying details are not required.',
-            style: TextStyle(color: C.muted, height: 1.4)),
+          'Only include what feels safe to share. Names, precise addresses and identifying details are not required.',
+          style: TextStyle(color: C.muted, height: 1.4),
+        ),
         const SizedBox(height: 14),
         LabeledField(
           label: 'What happened? · Required',
@@ -274,26 +326,30 @@ class _DetailsScreenState extends ConsumerState<DetailsScreen> {
           hint: 'Describe the concern in your own words…',
           maxLines: 7,
           maxLength: 3000,
-          onChanged: (v) =>
-              ref.read(draftProvider.notifier).patch((x) => x.copyWith(description: v)),
+          onChanged: (v) => ref
+              .read(draftProvider.notifier)
+              .patch((x) => x.copyWith(description: v)),
         ),
         Tx(
-            len < 20
-                ? 'Use at least 20 characters so a reviewer can understand your concern. ($len / 3,000)'
-                : '$len / 3,000 characters',
-            style: const TextStyle(fontSize: 12, color: C.muted)),
+          len < 20
+              ? 'Use at least 20 characters so a reviewer can understand your concern. ($len / 3,000)'
+              : '$len / 3,000 characters',
+          style: const TextStyle(fontSize: 12, color: C.muted),
+        ),
         const SizedBox(height: 16),
         const EvidenceSection(),
         PrimaryButton(
-            label: 'Continue to privacy & review',
-            icon: Icons.arrow_forward,
-            onPressed: (len >= 20 || hasVoice)
-                ? () => context.push('/report/privacy')
-                : null),
+          label: 'Continue to privacy & review',
+          icon: Icons.arrow_forward,
+          onPressed: (len >= 20 || hasVoice)
+              ? () => context.push('/report/privacy')
+              : null,
+        ),
         SecondaryButton(
-            label: 'Save private draft',
-            onPressed: () =>
-                snack(context, 'Draft kept while the app stays open.')),
+          label: 'Save private draft',
+          onPressed: () =>
+              snack(context, 'Draft kept while the app stays open.'),
+        ),
       ],
     );
   }
@@ -320,17 +376,20 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
         builder: (ctx) => AlertDialog(
           title: const Tx('Sign in for a confidential report'),
           content: const Tx(
-              'Confidential reports are linked to your account so support staff can follow up. Sign in, or choose Anonymous instead.'),
+            'Confidential reports are linked to your account so support staff can follow up. Sign in, or choose Anonymous instead.',
+          ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Tx('Not now')),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Tx('Not now'),
+            ),
             FilledButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  context.go('/signin');
-                },
-                child: const Tx('Sign in')),
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.go('/signin');
+              },
+              child: const Tx('Sign in'),
+            ),
           ],
         ),
       );
@@ -341,12 +400,16 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     try {
       final code = await Repo.submitReport(d);
       final failed = await Repo.uploadEvidence(code, d.attachments);
-      await ref.read(casesProvider.notifier).add(CaseRecord(
-            code: code,
-            category: d.category ?? 'Other',
-            createdAt: DateTime.now(),
-            status: 'received',
-          ));
+      await ref
+          .read(casesProvider.notifier)
+          .add(
+            CaseRecord(
+              code: code,
+              category: d.category ?? 'Other',
+              createdAt: DateTime.now(),
+              status: 'received',
+            ),
+          );
       ref.read(draftProvider.notifier).reset();
       if (mounted) {
         context.go('/report/receipt', extra: {'code': code, 'failed': failed});
@@ -354,7 +417,10 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     } catch (_) {
       if (mounted) {
         setState(() => _busy = false);
-        snack(context, 'Could not submit. Check your connection and try again.');
+        snack(
+          context,
+          'Could not submit. Check your connection and try again.',
+        );
       }
     }
   }
@@ -374,42 +440,66 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
         const StepBar(3),
         OptionTile(
           title: 'Anonymous report',
-          subtitle:
-              'No name, email, phone or account is required. Keep the reference code shown after you submit. Do not include contact details if you want to avoid identifying yourself. Anonymity is not absolute.',
+          subtitle: 'No name, email, phone or account is required. Keep the reference code shown after you submit. Do not include contact details if you want to avoid identifying yourself. Anonymity is not absolute.',
           selected: d.anonymous,
           onTap: () => notifier.patch((x) => x.copyWith(anonymous: true)),
         ),
         OptionTile(
           title: 'Confidential report',
-          subtitle:
-              'Linked to your account so authorized support staff can follow up. It is not published or shown in notification previews.',
+          subtitle: 'Linked to your account so authorized support staff can follow up. It is not published or shown in notification previews.',
           selected: !d.anonymous,
           onTap: () => notifier.patch((x) => x.copyWith(anonymous: false)),
         ),
         const InfoBox(
           icon: Icons.info_outline,
           title: 'Understand the limits',
-          text:
-              'Details, metadata or your account may identify you. Confidentiality can be limited by legal duties or immediate safety concerns.',
+          text: 'Details, metadata or your account may identify you. Confidentiality can be limited by legal duties or immediate safety concerns.',
         ),
-        SectionTitle('Review your report',
-            actionLabel: 'Edit', onAction: () => context.go('/report/incident')),
+        SectionTitle(
+          'Review your report',
+          actionLabel: 'Edit',
+          onAction: () => context.go('/report/incident'),
+        ),
         AppCard(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Pill('Non-sensitive summary'),
-            const SizedBox(height: 10),
-            Tx('Category: ${d.category ?? '—'}'),
-            Tx(
-                'Approximate date: ${d.date == null ? 'Not given' : DateFormat('MMMM yyyy').format(d.date!)}'),
-            Tx(
-                'Broad location: ${d.location.isEmpty ? 'Not given' : d.location}'),
-            Tx(d.attachments.isEmpty
-                ? 'Evidence: None attached'
-                : 'Evidence: ${d.attachments.length} attached'),
-            const SizedBox(height: 8),
-            const Tx('Your description is hidden here for privacy.',
-                style: TextStyle(fontSize: 12, color: C.muted)),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Pill('Non-sensitive summary'),
+              const SizedBox(height: 10),
+              ValueListenableBuilder<String>(
+                valueListenable: languageNotifier,
+                builder: (_, lang, _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${trFor(lang, 'Category: ')}${trFor(lang, d.category ?? 'Not given')}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${trFor(lang, 'Approximate date: ')}${d.date == null ? trFor(lang, 'Not given') : formatLocalizedMonthYear(d.date!, lang)}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${trFor(lang, 'Broad location: ')}${d.location.isEmpty ? trFor(lang, 'Not given') : d.location}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${trFor(lang, 'Evidence: ')}${d.attachments.isEmpty ? trFor(lang, 'None attached') : trFor(lang, '${d.attachments.length} attached')}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Tx(
+                'Your description is hidden here for privacy.',
+                style: TextStyle(fontSize: 12, color: C.muted),
+              ),
+            ],
+          ),
         ),
         const InfoBox(
           icon: Icons.location_off_outlined,
@@ -423,8 +513,9 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
           controlAffinity: ListTileControlAffinity.leading,
           contentPadding: EdgeInsets.zero,
           title: const Tx(
-              'I understand who may review this report and the limits above. I consent to submit the information I chose to share.',
-              style: TextStyle(fontSize: 13)),
+            'I understand who may review this report and the limits above. I consent to submit the information I chose to share.',
+            style: TextStyle(fontSize: 13),
+          ),
         ),
         const SizedBox(height: 8),
         PrimaryButton(
@@ -434,7 +525,9 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
           onPressed: (_consent && !_busy) ? _submit : null,
         ),
         SecondaryButton(
-            label: 'Back to details', onPressed: () => context.pop()),
+          label: 'Back to details',
+          onPressed: () => context.pop(),
+        ),
       ],
     );
   }
@@ -449,15 +542,17 @@ class ReceiptScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (code == null) {
-      return PageBody(children: [
-        StateView(
-          icon: Icons.help_outline,
-          title: 'No receipt to show',
-          message: 'Open My Cases to see reports saved on this device.',
-          actionLabel: 'Go to My Cases',
-          onAction: () => context.go('/home/cases'),
-        ),
-      ]);
+      return PageBody(
+        children: [
+          StateView(
+            icon: Icons.help_outline,
+            title: 'No receipt to show',
+            message: 'Open My Cases to see reports saved on this device.',
+            actionLabel: 'Go to My Cases',
+            onAction: () => context.go('/home/cases'),
+          ),
+        ],
+      );
     }
     return PageBody(
       stepLabel: '13 / SAFEVOICE',
@@ -465,59 +560,72 @@ class ReceiptScreen extends StatelessWidget {
       children: [
         if (!Repo.live)
           const Align(
-              alignment: Alignment.centerLeft,
-              child: Pill('Demo confirmation', bg: C.okBg, fg: C.ok)),
+            alignment: Alignment.centerLeft,
+            child: Pill('Demo confirmation', bg: C.okBg, fg: C.ok),
+          ),
         const SizedBox(height: 14),
         Center(
           child: Container(
             width: 110,
             height: 110,
             decoration: BoxDecoration(
-                color: C.okBg, borderRadius: BorderRadius.circular(32)),
-            child: const Icon(Icons.verified_user_outlined,
-                size: 52, color: C.ok),
+              color: C.okBg,
+              borderRadius: BorderRadius.circular(32),
+            ),
+            child: const Icon(
+              Icons.verified_user_outlined,
+              size: 52,
+              color: C.ok,
+            ),
           ),
         ),
         const SizedBox(height: 16),
         Tx(
-            Repo.live
-                ? 'Your report was received.'
-                : 'This illustrates a submission receipt. No live report was delivered.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: C.muted)),
+          Repo.live ? 'Your report was received.' : 'This illustrates a submission receipt. No live report was delivered.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: C.muted),
+        ),
         const SizedBox(height: 16),
         AppCard(
           color: C.tint,
           border: C.tintBorder,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Tx('Your private access code',
-                style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            SelectableText(code!,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Tx(
+                'Your private access code',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              SelectableText(
+                code!,
                 style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1)),
-            const SizedBox(height: 8),
-            const Tx(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Tx(
                 'Save this code somewhere only you can reach. It cannot be recovered. It is the only way to follow this report if you chose Anonymous.',
-                style: TextStyle(fontSize: 13, color: C.muted, height: 1.4)),
-            const SizedBox(height: 12),
-            SecondaryButton(
-              label: 'Copy access code',
-              icon: Icons.copy,
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: code!));
-                if (context.mounted) snack(context, 'Code copied.');
-              },
-            ),
-          ]),
+                style: TextStyle(fontSize: 13, color: C.muted, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              SecondaryButton(
+                label: 'Copy access code',
+                icon: Icons.copy,
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: code!));
+                  if (context.mounted) snack(context, 'Code copied.');
+                },
+              ),
+            ],
+          ),
         ),
         const InfoBox(
           icon: Icons.info_outline,
           title: 'A receipt is not a response guarantee',
-          text:
-              'Receiving a report does not guarantee review time, a response or emergency dispatch. SheRise does not automatically contact emergency services.',
+          text: 'Receiving a report does not guarantee review time, a response or emergency dispatch. SheRise does not automatically contact emergency services.',
         ),
         if (failedUploads > 0)
           InfoBox(
@@ -528,11 +636,14 @@ class ReceiptScreen extends StatelessWidget {
                 '$failedUploads item(s) could not be uploaded. Your report was still received. You can describe the details in a message from My Cases.',
           ),
         PrimaryButton(
-            label: 'Track this case',
-            icon: Icons.track_changes,
-            onPressed: () => context.go('/home/cases')),
+          label: 'Track this case',
+          icon: Icons.track_changes,
+          onPressed: () => context.go('/home/cases'),
+        ),
         SecondaryButton(
-            label: 'Return home', onPressed: () => context.go('/home')),
+          label: 'Return home',
+          onPressed: () => context.go('/home'),
+        ),
       ],
     );
   }
